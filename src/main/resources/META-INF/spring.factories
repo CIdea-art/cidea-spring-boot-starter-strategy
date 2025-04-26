@@ -1,0 +1,6 @@
+# Auto Configure
+# cn.cidea.framework.strategy.config.StrategyAutoConfiguration,\
+org.springframework.boot.env.EnvironmentPostProcessor=
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  cn.cidea.framework.strategy.core.support.StrategyRegistry,\
+  cn.cidea.framework.strategy.core.proxy.StrategyProxy
