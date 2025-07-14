@@ -24,7 +24,7 @@
 
 类图：
 
-![demo-class](pic\demo.png)
+![demo-class](pic/demo.png)
 
 实现代码，包含至多一个`@StrategyMaster`和若干`@StrategyBranch`：
 
@@ -117,7 +117,7 @@ void dynamic() {
 
 
 
-![demo-result](pic\demo-result.png)
+![demo-result](pic/demo-result.png)
 
 # 快速使用
 
@@ -210,7 +210,7 @@ public class OrgProxy implements IOrgService{
 - 内部方法`#route()`是**策略路由**的过程，确定要调用的分支实例。
 - `IOrgService`接口的实现方法，区分各个接口方法，通过`#route`路由到实例后调用。
 
-![proxy-class](pic\proxy-class.png)
+![proxy-class](pic/proxy-class.png)
 
 # 实现解析
 
