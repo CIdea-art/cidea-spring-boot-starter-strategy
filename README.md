@@ -4,7 +4,7 @@
 
 **环境：**Spring2.2.0及以上
 
-**使用场景：**在环境、出入参、需求等的影响下，接口的一种行为往往具有多套不同的实现。
+**使用场景：**在环境、出入参、需求等的影响下，接口的同一种行为往往具有多套不同的实现。如接口γ，在不同环境下有：A；AB；CDE。
 
 > 在互联网医院项目中，不同平台、机构通常有很多个性化的需求。
 >
@@ -121,7 +121,7 @@ void dynamic() {
     System.out.println("多key分支=============");
     DefaultDynamicStrategyRouter.routeKey.set("p1");
     System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
-    DefaultDynamicStrategyRouter.routeKey.set("p1");
+    DefaultDynamicStrategyRouter.routeKey.set("p2");
     System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
 }
 ```
