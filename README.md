@@ -62,11 +62,21 @@ public class SchoolService extends OrgService {
         return "school";
     }
 }
+
+// 自定义复合注解
+@P1Branch
+@StrategyBranch("p2")
+public class PluralService implements IOrgService {
+    @Override
+    public String getName() {
+        return "plural";
+    }
+}
 ```
 
 创建代理类`DefaultDynamicStrategyRouter`。
 
-- 实现接口`StrategyAPI`，重写`#getRouteKeys()`方法，返回内部属性`routeKey`的值，方法返回值匹配`@StrategyBranch`注解的值。该方法的实现可根据项目规则自定义。
+- 实现接口`StrategyAPI`，重写`#getRouteKeys()`方法，返回内部属性`routeKey`的值，方法返回值匹配`@StrategyBranch`注解的值。该方法的实现可根据项目规则自定义，一般`routeKey`是在项目公共的上下文参数，如机构id。
 
 ```java
 @StategyRoute
@@ -88,30 +98,31 @@ public class DefaultDynamicStrategyRouter extends StrategyAPI {
 ```java
 @Test
 void dynamic() {
-    System.out.println("期望：路由");
     IOrgService implBean = beanFactory.getBean(IOrgService.class);
-    System.out.println("school=============");
+    System.out.println("指定分支=============");
     DefaultDynamicStrategyRouter.routeKey.set("school");
-    System.out.println(implBean.getName());// 打印school
+    System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
 
-    System.out.println("hosp=============");
     DefaultDynamicStrategyRouter.routeKey.set("hosp");
-    System.out.println(implBean.getName());// 打印hosp
-    System.out.println(implBean.getName());// 打印hosp
+    System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
+    System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
 
-    System.out.println("ext=============");
     DefaultDynamicStrategyRouter.routeKey.set("ext");
-    System.out.println(implBean.getName());// 打印ext
+    System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
 
-    System.out.println("defaultOrg=============");
+    System.out.println("默认分支=============");
+    DefaultDynamicStrategyRouter.routeKey.set("DDD");
+    System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
+
+    System.out.println("默认分支，无指定key=============");
     DefaultDynamicStrategyRouter.routeKey.remove();
-    System.out.println(implBean.getName());// 打印defaultOrg
+    System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
 
-    System.out.println("plural=============");
+    System.out.println("多key分支=============");
     DefaultDynamicStrategyRouter.routeKey.set("p1");
-    System.out.println(implBean.getName());// 打印plural
-    DefaultDynamicStrategyRouter.routeKey.set("p2");
-    System.out.println(implBean.getName());// 打印plural
+    System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
+    DefaultDynamicStrategyRouter.routeKey.set("p1");
+    System.out.println("key = "+ DefaultDynamicStrategyRouter.routeKey.get() + ", name = " + implBean.getName());
 }
 ```
 
@@ -130,8 +141,8 @@ void dynamic() {
 ```java
 <dependency>
     <groupId>cn.cidea</groupId>
-    <artifactId>cidea-spring-boot-starter-strategy</artifactId>
-    <version>0.2.0-FACTORY</version>
+    <artifactId>cidea-spring-boot-starter-strategy-factory</artifactId>
+    <version>0.4.0-SNAPSHOT</version>
 </dependency>
 ```
 
@@ -159,13 +170,13 @@ SNAPSHOT版本为实验版本，如求稳则不推荐使用。
 
 注入Spring。
 
-> 在我的实际项目中，从request请求中获取公共参数里的appId、hospId作为路由键。
+> 在我的实际项目中，从request请求中获取公共上下文里的appId、hospId作为路由键。
 
 # 设计说明
 
 将调用接口方法策略分派到接口实现的这个过程抽象出来，称为**策略路由**。
 
-为追求无感使用，以AOP为灵感，使用代理作为**策略路由**的实现方案，用代理实例替换在Spring容器中接口的原默认实现实例。
+为追求无感使用，使用代理作为**策略路由**的实现方案，用代理实例替换在Spring容器中接口的原默认实现实例。
 
 ## 代理
 
@@ -236,121 +247,6 @@ public @interface StrategyAPI {
 
 ```
 
-在spring启动时使用`Scanner`扫描`API`。
-
-自动初始化默认配置。
-
-```java
-// StrategyAutoConfiguration.classs
-@Override
-public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
-    if (!AutoConfigurationPackages.has(this.beanFactory)) {
-        log.debug("Could not determine auto-configuration package, automatic Strategy scanning disabled.");
-        return;
-    }
-
-    log.debug("Searching for interface annotated with @Strategy");
-    List<String> packages = AutoConfigurationPackages.get(this.beanFactory);
-    if (log.isDebugEnabled()) {
-        packages.forEach(pkg -> log.debug("Using auto-configuration base package '{}'", pkg));
-    }
-
-    BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(StrategyScannerConfigurer.class);
-    builder.addPropertyValue("annotationClass", StrategyAPI.class);
-    builder.addPropertyValue("basePackage", StringUtils.collectionToCommaDelimitedString(packages));
-    builder.addPropertyValue("nameGenerator", new StrategyBeanNameGenerator());
-    BeanWrapper beanWrapper = new BeanWrapperImpl(StrategyScannerConfigurer.class);
-    Stream.of(beanWrapper.getPropertyDescriptors())
-            .filter(x -> x.getName().equals("lazyInitialization")).findAny()
-            .ifPresent(x -> builder.addPropertyValue("lazyInitialization", "${mybatis.lazy-initialization:false}"));
-    registry.registerBeanDefinition(StrategyScannerConfigurer.class.getName(), builder.getBeanDefinition());
-}
-```
-
-> `#registerBeanDefinitions`是`ImportBeanDefinitionRegistrar`的接口。
->
-> 使用`@Import`注解时会生效，和`spring-autoconfigure`有关，包含在`@SpringBootApplication`中。
->
-> 因此扫描路径与spring启动扫描路径一致。
-
-并根据配置创建`Scanner`。
-
-```java
-// StrategyScannerConfigurer.class
-@Override
-public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
-    // 构建一个Scanner，以下都是设置注解中的信息
-    ClassPathStrategyScanner scanner = new ClassPathStrategyScanner(registry, this);
-    scanner.setResourceLoader(this.applicationContext);
-    // 这里是进行实践的扫描注册操作
-    // StringUtils.tokenizeToStringArray是分给数组，匹配,或者;
-    scanner.scan(
-            StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
-}
-// ClassPathStrategyScanner.class
-public ClassPathStrategyScanner(BeanDefinitionRegistry registry, StrategyScannerConfigurer configurer) {
-    super(registry, false);
-    this.configurer = configurer;
-    setBeanNameGenerator(configurer.getNameGenerator());
-    registerDefaultFilters();
-}
-@Override
-protected void registerDefaultFilters() {
-    addIncludeFilter(new AnnotationTypeFilter(configurer.getAnnotationClass()));
-    addExcludeFilter((metadataReader, metadataReaderFactory) -> {
-        String className = metadataReader.getClassMetadata().getClassName();
-        return className.endsWith("package-info");
-    });
-}
-```
-
-扫描，通过父类方法`#doScan(String...)`完成扫描，并修饰加工。
-
-```java
-// ClassPathStrategyScanner.class
-@Override
-public Set<BeanDefinitionHolder> doScan(String... basePackages) {
-    // 调用父类的doScan,将路径转为beanDefinition，然后再封装为BeanDefinitionHolder
-    Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
-
-    if (!beanDefinitions.isEmpty()) {
-        // 这里对beanDefinition进一步加工
-        processBeanDefinitions(beanDefinitions);
-    } else {
-        log.warn("No Strategy service was found in '" + Arrays.toString(basePackages)
-                + "' package. Please check your configuration.");
-    }
-
-    return beanDefinitions;
-}
-
-private void processBeanDefinitions(Set<BeanDefinitionHolder> beanDefinitions) {
-    for (BeanDefinitionHolder holder : beanDefinitions) {
-        GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
-        String beanClassName = definition.getBeanClassName();
-        log.debug("Creating StrategyFactoryBean with name '" + holder.getBeanName() + "' and '" + beanClassName
-                + "' interface");
-        // 重点，设置构造参数，这里是API的全限定名
-        definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
-        // 重点，这里设置FactoryBean
-        definition.setBeanClass(configurer.getFactoryBeanClass());
-
-        // 设置参数
-        definition.getPropertyValues().add("beanFactory", this.beanFactory);
-        definition.getPropertyValues().add("beanName", holder.getBeanName());
-
-        // 保证API多实现的同时，默认调API代理
-        definition.setPrimary(true);
-        // definition.setInitMethodName();
-        definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
-    }
-}
-```
-
-
-
-
-
 定义注解`@StrategyMaster`标记`API`的主干。
 
 ```java
@@ -384,3 +280,196 @@ public @interface StrategyBranch {
 
 ```
 
+在spring启动时使用`Scanner`扫描`API`。
+
+自动初始化`Scanner`配置，并创建。
+
+```java
+// StrategyAPIRegistrar.classs
+@Override
+public void registerBeanDefinitions(AnnotationMetadata annotationMetadata, BeanDefinitionRegistry registry) {
+    if (!AutoConfigurationPackages.has(this.beanFactory)) {
+        log.debug("Could not determine auto-configuration package, automatic Strategy scanning disabled.");
+        return;
+    }
+
+    log.info("import packages: {}", StringUtils.collectionToCommaDelimitedString(packages));
+
+    BeanDefinitionBuilder builder = BeanDefinitionBuilder.genericBeanDefinition(StrategyScannerConfigurer.class);
+    builder.addPropertyValue("annotationClass", StrategyAPI.class);
+    builder.addPropertyValue("basePackage", StringUtils.collectionToCommaDelimitedString(packages));
+    builder.addPropertyValue("nameGenerator", new StrategyBeanNameGenerator());
+    BeanWrapper beanWrapper = new BeanWrapperImpl(StrategyScannerConfigurer.class);
+    Stream.of(beanWrapper.getPropertyDescriptors())
+            .filter(x -> x.getName().equals("lazyInitialization")).findAny()
+            .ifPresent(x -> builder.addPropertyValue("lazyInitialization", "${mybatis.lazy-initialization:false}"));
+    registry.registerBeanDefinition(StrategyScannerConfigurer.class.getName() + "@" + className, builder.getBeanDefinition());
+}
+```
+
+> `#registerBeanDefinitions`是`ImportBeanDefinitionRegistrar`的接口。
+>
+> 使用`@Import`注解时会生效，和`spring-autoconfigure`有关，包含在`@SpringBootApplication`中。
+>
+> 因此扫描路径与spring启动扫描路径一致。
+
+```java
+// StrategyScannerConfigurer.class
+@Override
+public void postProcessBeanDefinitionRegistry(BeanDefinitionRegistry registry) {
+    // 构建一个Scanner，以下都是设置注解中的信息
+    ClassPathStrategyScanner scanner = new ClassPathStrategyScanner(registry, this);
+    scanner.setResourceLoader(this.applicationContext);
+    // 这里是进行实践的扫描注册操作
+    // StringUtils.tokenizeToStringArray是分给数组，匹配,或者;
+    scanner.scan(
+            StringUtils.tokenizeToStringArray(this.basePackage, ConfigurableApplicationContext.CONFIG_LOCATION_DELIMITERS));
+}
+// ClassPathStrategyScanner.class
+public ClassPathStrategyScanner(BeanDefinitionRegistry registry, StrategyScannerConfigurer configurer) {
+    super(registry, false);
+    this.configurer = configurer;
+    setBeanNameGenerator(configurer.getNameGenerator());
+    registerDefaultFilters();
+}
+@Override
+protected void registerDefaultFilters() {
+    addIncludeFilter(new AnnotationTypeFilter(configurer.getAnnotationClass()));
+    addExcludeFilter((metadataReader, metadataReaderFactory) -> {
+        String className = metadataReader.getClassMetadata().getClassName();
+        return className.endsWith("package-info");
+    });
+}
+```
+
+ClassPathStrategyScanner继承Spring框架用于扫描包的类ClassPathBeanDefinitionScanner
+扫描，通过父类方法`#doScan(String...)`完成扫描，并修饰加工。
+
+```java
+// ClassPathStrategyScanner.class
+@Override
+public Set<BeanDefinitionHolder> doScan(String... basePackages) {
+    // 调用父类的doScan,将路径转为beanDefinition，然后再封装为BeanDefinitionHolder
+    Set<BeanDefinitionHolder> beanDefinitions = super.doScan(basePackages);
+
+    if (!beanDefinitions.isEmpty()) {
+        // 这里对beanDefinition进一步加工
+        processBeanDefinitions(beanDefinitions);
+    } else {
+        log.warn("No Strategy service was found in '" + Arrays.toString(basePackages)
+                + "' package. Please check your configuration.");
+    }
+
+    return beanDefinitions;
+}
+
+// 修饰加工，生成代理工厂、保证代理作为主实例自动装配等
+private void processBeanDefinitions(Set<BeanDefinitionHolder> beanDefinitions) {
+    for (BeanDefinitionHolder holder : beanDefinitions) {
+        GenericBeanDefinition definition = (GenericBeanDefinition) holder.getBeanDefinition();
+        String beanClassName = definition.getBeanClassName();
+        log.debug("Creating StrategyFactoryBean with name '" + holder.getBeanName() + "' and '" + beanClassName
+                + "' interface");
+        // 重点，设置构造参数，这里是API的全限定名
+        definition.getConstructorArgumentValues().addGenericArgumentValue(beanClassName);
+        // 重点，这里设置FactoryBean
+        definition.setBeanClass(configurer.getFactoryBeanClass());
+
+        // 设置参数
+        definition.getPropertyValues().add("beanFactory", this.beanFactory);
+        definition.getPropertyValues().add("beanName", holder.getBeanName());
+
+        // 保证API多实现的同时，默认调API代理
+        definition.setPrimary(true);
+        // definition.setInitMethodName();
+        definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE);
+    }
+}
+```
+
+代理工厂`StrategyFactoryBean`创建一个代理实例，实现代码略。
+
+代理实现`StrategyProxy`，原型模式为每个api提供独立的代理实例。
+简要概述就是根据`IStrategyRouter#getRouteKeys`在`StrategyRegistry`注册中心找到对应的分支实例，然后执行。
+
+```java
+@Scope("prototype")
+public class StrategyProxy implements MethodInterceptor, BeanFactoryAware {
+
+    /**
+     * 路由API{@link StrategyAPI}
+     */
+    private final Class<?> api;
+
+    /**
+     * api分支的注册中心
+     */
+    @Autowired
+    @Lazy
+    private StrategyRegistry registry;
+    
+    @Override
+    public Object intercept(Object obj, Method method, Object[] args, MethodProxy methodProxy) throws Throwable {
+        if (ReflectionUtils.isObjectMethod(method)) {
+            return method.invoke(obj, args);
+        }
+        Object masterBean = registry.getMasterBean(api);
+        log.debug("invoke: {}#{}({})", obj.getClass(), method.getName(), Arrays.toString(method.getParameterTypes()));
+        // 获取routeKey。getRouteKeys()是抽象方法，用于重写，提供自定义的获取方案
+        IStrategyRouter router = beanFactory.getBean(routerClass);
+        Assert.notNull(router, "not bean of IStrategyRoute");
+
+        String[] routeKeys = router.getRouteKeys(obj, method, args, methodProxy);
+        if (routeKeys == null) {
+            // 默认，避免NPE
+            routeKeys = new String[]{};
+        }
+        log.debug("api = {}, routeKeys = {}", api, Arrays.toString(routeKeys));
+        // 待执行bean和method的封装对象
+        // 尝试获取缓存
+        Invocation invocationToUse = StrategyCache.getCache(routeKeys, api, method);
+        if (invocationToUse == null) {
+            // 无缓存，尝试匹配branch
+            for (String routeKey : routeKeys) {
+                if (routeKey == null) {
+                    continue;
+                }
+                Object beanToUse = registry.getBranchBean(api, routeKey);
+                if (beanToUse == null) {
+                    continue;
+                }
+                Method methodToUse = MethodUtils.getMatchingAccessibleMethod(
+                        beanToUse.getClass(), method.getName(), method.getParameterTypes());
+                if (methodToUse == null) {
+                    log.info("not found methodToUse.");
+                    continue;
+                }
+                invocationToUse = new Invocation(methodToUse, beanToUse);
+                break;
+            }
+        }
+        if (invocationToUse == null) {
+            if (masterBean == null) {
+                throw new StrategyMasterNotFoundException("strategy `" + api.getName() + "` has not master.");
+            }
+            log.debug("call master service.");
+
+            Method methodToUse = MethodUtils.getMatchingAccessibleMethod(
+                    masterBean.getClass(), method.getName(), method.getParameterTypes());
+            if (methodToUse == null) {
+                throw new StrategyMasterNotFoundException(api.getName() + " can access method `" + method.getName() + "`.");
+            }
+            invocationToUse = new Invocation(methodToUse, masterBean);
+        }
+        StrategyCache.cacheBean(routeKeys, api, method, invocationToUse);
+
+        Object result = invocationToUse.invoke(args);
+        log.debug("invoke finished.");
+        return result;
+    }
+
+}
+
+```
+
+`StrategyRegistry`中使用`ApplicationContext#getBeansWithAnnotation()`方法获取标注有分支注解的实例Bean，然后解析注解参数，注册到内部Map中，较为简单。
