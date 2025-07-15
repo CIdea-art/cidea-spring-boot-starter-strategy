@@ -6,7 +6,7 @@
 
 **使用场景：**在环境、出入参、需求等的影响下，接口的同一种行为往往具有多套不同的实现。如接口γ，在不同环境下有：A；AB；CDE。
 
-> 在互联网医院项目中，不同平台、机构通常有很多个性化的需求。
+> 在公司项目中，不同平台、机构通常有很多个性化的需求。
 >
 > - 对接HIS接口。针对同一个接口方法，以上传HIS为例，由于HIS接口的不一致性，每个机构对接的接口方法都必然有一套独特实现。
 > - 对不同机构而言，一个接口方法的行为不一致、行为数量不一致。典型如消息推送，HIS及需求的不一致导致推送的消息类型多样，消息内容多样。
@@ -473,3 +473,121 @@ public class StrategyProxy implements MethodInterceptor, BeanFactoryAware {
 ```
 
 `StrategyRegistry`中使用`ApplicationContext#getBeansWithAnnotation()`方法获取标注有分支注解的实例Bean，然后解析注解参数，注册到内部Map中，较为简单。
+
+
+# 实战示例
+
+## 钩子
+
+涉及包和类如下
+
+![exp-ihp-package](pic/exp-ihp-package.png)
+
+- service：常规的service服务类，标准且通用的业务流程和处理。
+- hook：提供各个业务钩子方法，在service中调用。子包为对应Hook分支的定制化实现。
+
+由`PostHook`举例，这是物流服务的钩子。
+
+```java
+
+/**
+ * 保存入库之前填充、修改一些参数
+ */
+public void beforeSave(HosOrderMainInfo order, HosOrderPostSaveDTO saveDTO) {
+}
+
+/**
+ * 呼叫物流邮寄之前填充、修改一些参数
+ * 如：备注取药码
+ */
+public void beforeMail(HosOrderPost post) {
+}
+
+/**
+ * 邮寄之后触发一些动作
+ * 如：通知三方
+ */
+public void afterMail(HosOrderPost post) {
+}
+
+```
+
+## 策略
+
+接口的策略模式调用。如对接不同支付系统、机构数据、物流系统等。
+抽象出标准公共接口定义，再根据接口实现不同分支。
+
+由支付对接的service列出部分伪代码示例。
+
+`PayServiceImpl`，支付对接服务，发起支付过程的处理，并持久化支付信息。
+`IPayExtService`，支付接口，定义标准方法。
+
+```java
+// PayServiceImpl.class
+@Autowired
+private IPayExtService extService;
+
+public PayAuthDTO pay(PaySaveDTO saveDTO) {
+    // 获取pay，查询支付记录是新支付还是继续支付
+    Pay pay = ...
+    
+    // 调用支付接口，获取支付凭证
+    PayAuthDTO authDTO = extService.pay(pay, saveDTO);
+    /**
+     * 保存或更新支付凭证
+     */
+    return authDTO;
+}
+
+public void refund(PayRefundDTO refundDTO) {
+    // 退款处理，验证参数状态等
+
+    // 调用支付接口，获取支付凭证
+    extService.refund(pay, refundDTO);
+    // 保存退款凭证，修改状态等
+}
+
+```
+
+支付接口`IPayExtService`定义。
+
+```java
+
+@StrategyAPI
+public interface IPayExtService {
+    /**
+     * 发起支付
+     * @param pay
+     * @param saveDTO
+     * @return  支付凭证
+     */
+    PayAuthDTO pay(Pay pay, PaySaveDTO saveDTO);
+
+    /**
+     * 发起退款
+     * @param pay
+     * @param refundDTO
+     */
+    void refund(Pay pay, PayRefundDTO refundDTO);
+}
+
+```
+
+以下是动态调用的各个支付实现，分别为阿里、内部onepay、齐脉、微信、内部yyds。
+皆由`@StrategyBranch`分支注解策略化动态分派。默认调用`@StrategyMaster`注解标注的`PayExtYydsService`。
+
+![exp-ihp-payext](pic/exp-ihp-payext.png)
+
+其它分支根据注解指定。`StrategyBranch***`是同一个机构相同参数的复合注解。
+
+```java
+@Service
+@StrategyBranchBjxc
+@StrategyBranchFjlyrm
+@StrategyBranchFjln
+@StrategyBranchPj
+@StrategyBranchZsxm
+public class PayExtWechatService implements IPayExtService {
+    ......实现代码略
+}
+```
