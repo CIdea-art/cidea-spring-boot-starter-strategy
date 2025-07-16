@@ -144,9 +144,9 @@ void dynamic() {
 
 ```java
 <dependency>
-    <groupId>cn.cidea</groupId>
-    <artifactId>cidea-spring-boot-starter-strategy-factory</artifactId>
-    <version>0.4.0-SNAPSHOT</version>
+    <groupId>io.github.cidea-art</groupId>
+    <artifactId>cidea-spring-boot-starter-strategy</artifactId>
+    <version>1.0.0</version>
 </dependency>
 ```
 
