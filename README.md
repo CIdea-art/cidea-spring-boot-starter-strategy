@@ -80,11 +80,10 @@ public class PluralService implements IOrgService {
 
 创建代理类`DefaultDynamicStrategyRouter`。
 
-- 实现接口`StrategyAPI`，重写`#getRouteKeys()`方法，返回内部属性`routeKey`的值，方法返回值匹配`@StrategyBranch`注解的值。该方法的实现可根据项目规则自定义，一般`routeKey`是在项目公共的上下文参数，如机构id。
+- 实现接口`IStrategyRouter`，重写`#getRouteKeys()`方法，返回内部属性`routeKey`的值，方法返回值匹配`@StrategyBranch`注解的值。该方法的实现可根据项目规则自定义，一般`routeKey`是在项目公共的上下文参数，如机构id。
 
 ```java
-@StategyRoute
-public class DefaultDynamicStrategyRouter extends StrategyAPI {
+public class DefaultDynamicStrategyRouter extends IStrategyRouter {
     public static ThreadLocal<String> routeKey = new ThreadLocal<>();
 
     @Override
@@ -583,6 +582,7 @@ public interface IPayExtService {
 ![exp-ihp-payext](pic/exp-ihp-payext.png)
 
 其它分支根据注解指定。`StrategyBranch***`是同一个机构相同参数的复合注解。
+如下代码，共计5个机构走微信支付。
 
 ```java
 @Service
