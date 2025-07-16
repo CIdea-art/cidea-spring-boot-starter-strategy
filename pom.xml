@@ -3,9 +3,34 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>cn.cidea</groupId>
-    <artifactId>cidea-spring-boot-starter-strategy-factory</artifactId>
-    <version>0.4.0-SNAPSHOT</version>
+    <groupId>io.github.cidea-art</groupId>
+    <artifactId>cidea-spring-boot-starter-strategy</artifactId>
+    <version>1.0.0</version>
+    <name>cidea-spring-boot-starter-strategy</name>
+
+    <description>Spring Strategy Plugin</description>
+    <url>https://github.com/CIdea-art/cidea-spring-boot-starter-strategy</url>
+
+    <licenses>
+        <license>
+            <name>The Apache Software License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>CIdea</name>
+            <email>cidea6276@foxmail.com</email>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git@github.com:CIdea-art/cidea-spring-boot-starter-strategy.git</connection>
+        <developerConnection>scm:git:git@github.com:CIdea-art/cidea-spring-boot-starter-strategy.git</developerConnection>
+        <url>git@github.com:CIdea-art/cidea-spring-boot-starter-strategy.git</url>
+    </scm>
 
     <properties>
         <maven.compiler.source>8</maven.compiler.source>
@@ -29,13 +54,15 @@
 
     <build>
         <plugins>
+            <!--Compiler-->
+            <plugin>
+                <artifactId>maven-compiler-plugin</artifactId>
+            </plugin>
             <!-- Source -->
             <plugin>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.1</version>
                 <executions>
                     <execution>
-                        <id>attach-sources</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
@@ -44,23 +71,50 @@
             </plugin>
             <!-- Javadoc -->
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- GPG 签名 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-gpg-plugin</artifactId>
+                <version>3.0.1</version>
+                <executions>
+                    <execution>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>sign</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Central Publishing 插件（2025年新要求） -->
+            <plugin>
+                <groupId>org.sonatype.central</groupId>
+                <artifactId>central-publishing-maven-plugin</artifactId>
+                <version>0.8.0</version>
+                <extensions>true</extensions>
+                <configuration>
+                    <publishingServerId>central</publishingServerId>
+                    <autoPublish>true</autoPublish>
+                </configuration>
             </plugin>
         </plugins>
     </build>
 
     <distributionManagement>
         <repository>
-            <id>yhkj-nexus-snapshots</id>
-            <name>Nexus Snapshot Repository</name>
-            <url>https://nexus.ylzpay.com/repository/maven-snapshots</url>
+            <id>central</id>
+            <url>https://central.sonatype.com/</url>
         </repository>
-        <snapshotRepository>
-            <id>yhkj-nexus-snapshots</id>
-            <name>Nexus Snapshot Repository</name>
-            <url>https://nexus.ylzpay.com/repository/maven-snapshots</url>
-        </snapshotRepository>
     </distributionManagement>
 
 </project>

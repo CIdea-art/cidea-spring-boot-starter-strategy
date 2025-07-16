@@ -17,6 +17,10 @@
 - 从my-labs中独立
 - 修复同一个父类method被不同实例调用时互串，缓存增加bean作为key。
 
+1.0.0
+
+- 正式发布至central
+
 
 # 演示
 
@@ -588,6 +592,6 @@ public interface IPayExtService {
 @StrategyBranchPj
 @StrategyBranchZsxm
 public class PayExtWechatService implements IPayExtService {
-    ......实现代码略
+    // 实现代码略
 }
 ```
