@@ -1,6 +1,6 @@
-package cn.cidea.framework.strategy.core.factory;
+package io.github.cideaart.framework.strategy.core.factory;
 
-import cn.cidea.framework.strategy.core.proxy.StrategyProxy;
+import io.github.cideaart.framework.strategy.core.proxy.StrategyProxy;
 import org.springframework.beans.factory.*;
 import org.springframework.cglib.core.SpringNamingPolicy;
 import org.springframework.cglib.proxy.Enhancer;

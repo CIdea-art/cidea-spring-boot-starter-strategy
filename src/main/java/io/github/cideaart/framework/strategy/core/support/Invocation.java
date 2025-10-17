@@ -1,4 +1,4 @@
-package cn.cidea.framework.strategy.core.support;
+package io.github.cideaart.framework.strategy.core.support;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;

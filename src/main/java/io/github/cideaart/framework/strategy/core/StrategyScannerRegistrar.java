@@ -1,13 +1,11 @@
-package cn.cidea.framework.strategy.core;
+package io.github.cideaart.framework.strategy.core;
 
-import cn.cidea.framework.strategy.core.annotation.StrategyScan;
-import cn.cidea.framework.strategy.core.scanner.StrategyScannerConfigurer;
+import io.github.cideaart.framework.strategy.core.annotation.StrategyScan;
+import io.github.cideaart.framework.strategy.core.scanner.StrategyScannerConfigurer;
 import org.springframework.beans.factory.support.BeanDefinitionBuilder;
 import org.springframework.beans.factory.support.BeanDefinitionRegistry;
-import org.springframework.context.ResourceLoaderAware;
 import org.springframework.context.annotation.ImportBeanDefinitionRegistrar;
 import org.springframework.core.annotation.AnnotationAttributes;
-import org.springframework.core.io.ResourceLoader;
 import org.springframework.core.type.AnnotationMetadata;
 import org.springframework.core.type.StandardAnnotationMetadata;
 import org.springframework.util.ClassUtils;

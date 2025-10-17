@@ -1,7 +1,7 @@
-package cn.cidea.framework.strategy.core.annotation;
+package io.github.cideaart.framework.strategy.core.annotation;
 
-import cn.cidea.framework.strategy.core.IStrategyRouter;
-import cn.cidea.framework.strategy.core.StrategyAPIRegistrar;
+import io.github.cideaart.framework.strategy.core.IStrategyRouter;
+import io.github.cideaart.framework.strategy.core.StrategyAPIRegistrar;
 import org.springframework.cglib.proxy.MethodProxy;
 import org.springframework.context.annotation.Import;
 

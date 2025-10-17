@@ -1,4 +1,4 @@
-package cn.cidea.framework.strategy.core.exception;
+package io.github.cideaart.framework.strategy.core.exception;
 
 /**
  * 未找到主干或主干方法

@@ -1,4 +1,4 @@
-package cn.cidea.framework.strategy.core;
+package io.github.cideaart.framework.strategy.core;
 
 import org.springframework.cglib.proxy.MethodProxy;
 

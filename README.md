@@ -21,6 +21,9 @@
 
 - 正式发布至central
 
+1.1.0
+
+- 修复bug，当routeKeys缓存分支时，首位routeKey命中缓存后会覆盖修非首位routeKey的缓存，导致以非首位routeKey的分支无法正确命中缓存
 
 # 演示
 

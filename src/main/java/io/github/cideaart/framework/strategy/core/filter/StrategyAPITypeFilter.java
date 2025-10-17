@@ -1,6 +1,6 @@
-package cn.cidea.framework.strategy.core.filter;
+package io.github.cideaart.framework.strategy.core.filter;
 
-import cn.cidea.framework.strategy.core.annotation.StrategyMaster;
+import io.github.cideaart.framework.strategy.core.annotation.StrategyMaster;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.annotation.AnnotationUtils;

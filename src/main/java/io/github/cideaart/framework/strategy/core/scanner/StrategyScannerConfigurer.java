@@ -1,8 +1,8 @@
-package cn.cidea.framework.strategy.core.scanner;
+package io.github.cideaart.framework.strategy.core.scanner;
 
-import cn.cidea.framework.strategy.core.annotation.StrategyAPI;
-import cn.cidea.framework.strategy.core.factory.StrategyFactoryBean;
-import cn.cidea.framework.strategy.core.factory.StrategyBeanNameGenerator;
+import io.github.cideaart.framework.strategy.core.annotation.StrategyAPI;
+import io.github.cideaart.framework.strategy.core.factory.StrategyFactoryBean;
+import io.github.cideaart.framework.strategy.core.factory.StrategyBeanNameGenerator;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.BeanNameAware;
 import org.springframework.beans.factory.InitializingBean;

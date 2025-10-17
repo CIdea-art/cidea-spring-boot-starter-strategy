@@ -1,6 +1,6 @@
-package cn.cidea.framework.strategy.core.annotation;
+package io.github.cideaart.framework.strategy.core.annotation;
 
-import cn.cidea.framework.strategy.core.StrategyScannerRegistrar;
+import io.github.cideaart.framework.strategy.core.StrategyScannerRegistrar;
 import org.springframework.context.annotation.Import;
 import org.springframework.core.annotation.AliasFor;
 

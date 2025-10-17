@@ -1,4 +1,4 @@
-package cn.cidea.framework.strategy.core.annotation;
+package io.github.cideaart.framework.strategy.core.annotation;
 
 import java.lang.annotation.*;
 

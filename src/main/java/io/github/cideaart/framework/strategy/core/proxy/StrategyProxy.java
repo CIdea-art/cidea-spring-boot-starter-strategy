@@ -1,11 +1,11 @@
-package cn.cidea.framework.strategy.core.proxy;
+package io.github.cideaart.framework.strategy.core.proxy;
 
-import cn.cidea.framework.strategy.core.IStrategyRouter;
-import cn.cidea.framework.strategy.core.annotation.StrategyAPI;
-import cn.cidea.framework.strategy.core.exception.StrategyMasterNotFoundException;
-import cn.cidea.framework.strategy.core.support.Invocation;
-import cn.cidea.framework.strategy.core.support.StrategyCache;
-import cn.cidea.framework.strategy.core.support.StrategyRegistry;
+import io.github.cideaart.framework.strategy.core.IStrategyRouter;
+import io.github.cideaart.framework.strategy.core.annotation.StrategyAPI;
+import io.github.cideaart.framework.strategy.core.exception.StrategyMasterNotFoundException;
+import io.github.cideaart.framework.strategy.core.support.Invocation;
+import io.github.cideaart.framework.strategy.core.support.StrategyCache;
+import io.github.cideaart.framework.strategy.core.support.StrategyRegistry;
 import org.apache.commons.lang3.reflect.MethodUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -88,8 +88,8 @@ public class StrategyProxy implements MethodInterceptor, BeanFactoryAware {
         }
         log.debug("api = {}, routeKeys = {}", api, Arrays.toString(routeKeys));
         // 待执行bean和method的封装对象
-        Invocation invocationToUse = StrategyCache.getCache(routeKeys, api, method);
         // 尝试获取缓存
+        Invocation invocationToUse = StrategyCache.getBranch(routeKeys, api, method);
         if (invocationToUse == null) {
             // 无缓存，尝试匹配branch
             for (String routeKey : routeKeys) {
@@ -107,6 +107,8 @@ public class StrategyProxy implements MethodInterceptor, BeanFactoryAware {
                     continue;
                 }
                 invocationToUse = new Invocation(methodToUse, beanToUse);
+                log.info("find branch, api = {}, routeKey = {}, bean = {}", api, routeKey, beanToUse.getClass().getName());
+                StrategyCache.cacheBranch(routeKey, api, method, invocationToUse);
                 break;
             }
         }
@@ -116,14 +118,17 @@ public class StrategyProxy implements MethodInterceptor, BeanFactoryAware {
             }
             log.debug("call master service.");
 
-            Method methodToUse = MethodUtils.getMatchingAccessibleMethod(
-                    masterBean.getClass(), method.getName(), method.getParameterTypes());
-            if (methodToUse == null) {
-                throw new StrategyMasterNotFoundException(api.getName() + " can access method `" + method.getName() + "`.");
+            invocationToUse = StrategyCache.getMaster(api, method);
+            if (invocationToUse == null) {
+                Method methodToUse = MethodUtils.getMatchingAccessibleMethod(
+                        masterBean.getClass(), method.getName(), method.getParameterTypes());
+                if (methodToUse == null) {
+                    throw new StrategyMasterNotFoundException(api.getName() + " can access method `" + method.getName() + "`.");
+                }
+                invocationToUse = new Invocation(methodToUse, masterBean);
+                StrategyCache.cacheMaster(api, method, invocationToUse);
             }
-            invocationToUse = new Invocation(methodToUse, masterBean);
         }
-        StrategyCache.cacheBean(routeKeys, api, method, invocationToUse);
 
         Object result = invocationToUse.invoke(args);
         log.debug("invoke finished.");

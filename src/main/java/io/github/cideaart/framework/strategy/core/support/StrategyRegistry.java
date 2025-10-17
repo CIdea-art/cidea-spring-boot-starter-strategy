@@ -1,6 +1,6 @@
-package cn.cidea.framework.strategy.core.support;
+package io.github.cideaart.framework.strategy.core.support;
 
-import cn.cidea.framework.strategy.core.annotation.*;
+import io.github.cideaart.framework.strategy.core.annotation.*;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

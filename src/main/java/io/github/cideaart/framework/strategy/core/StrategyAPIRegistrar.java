@@ -1,8 +1,9 @@
-package cn.cidea.framework.strategy.core;
+package io.github.cideaart.framework.strategy.core;
 
-import cn.cidea.framework.strategy.core.annotation.StrategyAPI;
-import cn.cidea.framework.strategy.core.factory.StrategyBeanNameGenerator;
-import cn.cidea.framework.strategy.core.scanner.StrategyScannerConfigurer;
+import io.github.cideaart.framework.strategy.core.annotation.StrategyAPI;
+import io.github.cideaart.framework.strategy.core.factory.StrategyBeanNameGenerator;
+import io.github.cideaart.framework.strategy.core.scanner.StrategyScannerConfigurer;
+import io.github.cideaart.framework.strategy.core.annotation.StrategyMaster;
 import org.apache.commons.lang3.ArrayUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * 根据{@link StrategyAPI}和{@link cn.cidea.framework.strategy.core.annotation.StrategyMaster}及其上一级接口、父类的路径自动扫描
+ * 根据{@link StrategyAPI}和{@link StrategyMaster}及其上一级接口、父类的路径自动扫描
  * @author CIdea
  */
 public class StrategyAPIRegistrar implements ImportBeanDefinitionRegistrar {

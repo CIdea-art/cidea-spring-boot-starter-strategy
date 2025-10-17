@@ -1,6 +1,6 @@
-package cn.cidea.framework.strategy.core.scanner;
+package io.github.cideaart.framework.strategy.core.scanner;
 
-import cn.cidea.framework.strategy.core.filter.StrategyAPITypeFilter;
+import io.github.cideaart.framework.strategy.core.filter.StrategyAPITypeFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
